@@ -1,0 +1,214 @@
+
+
+model AiAgent {
+
+    id                String        @id @default(uuid())  
+    name            String          
+    description  String          
+    availabilitySchedule  String?          
+    status        String?          
+
+userId        String          
+    user            User?            @relation(fields: [userId], references: [id], name:"user")  
+ 
+    aiAgentTags  AiAgentTag[]  @relation("aiAgent")  
+    pricingOptions  PricingOption[]  @relation("aiAgent")  
+    hires          Hire[]        @relation("aiAgent")  
+    reviews      Review[]    @relation("aiAgent")  
+    aiAgentImages  AiAgentImage[]  @relation("aiAgent")  
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt  @default(now())
+      @@allow("all", true)
+}
+
+model Tag {
+
+    id                String        @id @default(uuid())  
+    name            String          
+    type            String          
+
+aiAgentTags  AiAgentTag[]  @relation("tag")  
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt  @default(now())
+      @@allow("all", true)
+}
+
+model AiAgentTag {
+
+    id                String        @id @default(uuid())  
+
+aiAgentId  String          
+    aiAgent      AiAgent?      @relation(fields: [aiAgentId], references: [id], name:"aiAgent")  
+    tagId          String          
+    tag              Tag?              @relation(fields: [tagId], references: [id], name:"tag")  
+ 
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt  @default(now())
+      @@allow("all", true)
+}
+
+model PricingOption {
+
+    id                String        @id @default(uuid())  
+    type            String?          
+    price          Float            
+
+aiAgentId  String          
+    aiAgent      AiAgent?      @relation(fields: [aiAgentId], references: [id], name:"aiAgent")  
+ 
+    hires          Hire[]        @relation("pricingOption")  
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt  @default(now())
+      @@allow("all", true)
+}
+
+model Hire {
+
+    id                String        @id @default(uuid())  
+    projectDetails  String?          
+    status        String?          
+
+userId        String          
+    user            User?            @relation(fields: [userId], references: [id], name:"user")  
+    aiAgentId  String          
+    aiAgent      AiAgent?      @relation(fields: [aiAgentId], references: [id], name:"aiAgent")  
+    pricingOptionId  String          
+    pricingOption  PricingOption?  @relation(fields: [pricingOptionId], references: [id], name:"pricingOption")  
+ 
+    messages    Message[]  @relation("hire")  
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt  @default(now())
+      @@allow("all", true)
+}
+
+model Review {
+
+    id                String        @id @default(uuid())  
+    rating        Float?            
+    comment      String?          
+
+userId        String          
+    user            User?            @relation(fields: [userId], references: [id], name:"user")  
+    aiAgentId  String          
+    aiAgent      AiAgent?      @relation(fields: [aiAgentId], references: [id], name:"aiAgent")  
+ 
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt  @default(now())
+      @@allow("all", true)
+}
+
+model AiAgentImage {
+
+    id                String        @id @default(uuid())  
+    imageUrl    String?          
+
+aiAgentId  String          
+    aiAgent      AiAgent?      @relation(fields: [aiAgentId], references: [id], name:"aiAgent")  
+ 
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt  @default(now())
+      @@allow("all", true)
+}
+
+model Message {
+
+    id                String        @id @default(uuid())  
+    content      String?          
+
+senderUserId  String          
+    senderUser  User?            @relation(fields: [senderUserId], references: [id], name:"senderUser")  
+    recipientUserId  String          
+    recipientUser  User?            @relation(fields: [recipientUserId], references: [id], name:"recipientUser")  
+    hireId        String?          
+    hire            Hire?            @relation(fields: [hireId], references: [id], name:"hire")  
+ 
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt  @default(now())
+      @@allow("all", true)
+}
+
+enum UserStatus {
+    INVITED
+    VERIFIED
+}
+
+model User {
+    id                String             @id @default(uuid())
+    name              String?
+    email             String?            @unique
+    pictureUrl        String?            @default('https://i.imgur.com/ZdJSK3Y.jpeg')
+    tokenInvitation   String?
+    emailVerified     Boolean?
+    
+    stripeCustomerId  String?
+    
+    status            UserStatus         @default(VERIFIED)
+
+    // this is the role of the user for the application
+    globalRole        String             @default('USER')
+    password          String?            @password @omit
+    createdAt         DateTime           @default(now())
+    updatedAt         DateTime           @updatedAt @default(now())
+    accounts          Account[]
+    sessions          Session[]
+
+pushNotifications PushNotification[] @relation("user")
+
+aiAgents    AiAgent[]  @relation("user")  
+        hires          Hire[]        @relation("user")  
+        reviews      Review[]    @relation("user")  
+        messagesAsSenderUser  Message[]  @relation("senderUser")  
+        messagesAsRecipientUser  Message[]  @relation("recipientUser")  
+
+@@auth()
+    @@allow("all", auth().id == this.id)
+    @@allow('all', auth().globalRole == 'ADMIN')
+
+    //we only allow that user to register if they don't create an admin role
+    @@allow("create", globalRole != 'ADMIN')
+    @@allow("read", true)
+}
+
+model PushNotification {
+    id           String   @id @default(uuid())
+    endpoint     String
+    subscription String
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt @default(now())
+
+    userId       String
+    user         User     @relation(fields: [userId], references: [id], name: 'user')
+
+@@allow("all", true)
+}
+
+model Account {
+    id                       String  @id @default(uuid())
+    userId                   String
+    type                     String
+    provider                 String
+    providerAccountId        String
+    refresh_token            String? // @db.Text
+    access_token             String? // @db.Text
+    expires_at               Int?
+    token_type               String?
+    scope                    String?
+    id_token                 String? // @db.Text
+    session_state            String?
+    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    refresh_token_expires_in Int?
+
+    @@unique([provider, providerAccountId])
+
+    @@allow("all", auth().id == user.id)
+}
+
+model Session {
+    id           String   @id @default(uuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@allow("all", auth().id == user.id)
+}
