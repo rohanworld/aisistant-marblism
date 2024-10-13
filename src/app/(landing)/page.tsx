@@ -11,12 +11,12 @@ import { LandingSocialProof } from '@/designSystem/landing/LandingSocialProof'
 import { LandingSocialRating } from '@/designSystem/landing/LandingSocialRating'
 import { LandingTestimonials } from '@/designSystem/landing/LandingTestimonials'
 import {
+  ClockCircleOutlined,
+  DollarOutlined,
+  // ScaleOutlined,
+  GlobalOutlined,
   RobotOutlined,
   ThunderboltOutlined,
-  DollarOutlined,
-  ClockCircleOutlined,
-  ScaleOutlined,
-  GlobalOutlined,
 } from '@ant-design/icons'
 
 export default function LandingPage() {
@@ -39,7 +39,7 @@ export default function LandingPage() {
     {
       heading: `Instant Scalability`,
       description: `Effortlessly scale your workforce up or down based on project demands without HR hassles.`,
-      icon: <ScaleOutlined />,
+      icon: <DollarOutlined />,
     },
     {
       heading: `Round-the-Clock Availability`,
