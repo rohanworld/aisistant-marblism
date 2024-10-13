@@ -54,5 +54,3 @@ export const LandingFAQ: React.FC<Props> = ({
     </section>
   )
 }
-
-export default LandingFAQ
